@@ -18,6 +18,10 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 
+//  Control pins for radio
+#define CE_PIN   9
+#define CSN_PIN 10
+
 
 #if defined (TX)
 
@@ -26,9 +30,6 @@
 #include <I2Cdev.h>
 #include <MPU6050.h>
 
-//  Control pins for gyro
-#define CE_PIN   9
-#define CSN_PIN 10
 
 MPU6050 mpu;    // Create a gyro/accel
 
@@ -44,21 +45,26 @@ int16_t motion[7];    //    ax, ay, az, gx, gy, gz, count
 int16_t count = 0;
 
 unsigned long time;        //  Time of last sample
-const unsigned long sampletime = 500;    //  ms between samples
+const unsigned long sampletime = 100;    //  ms between samples
+
+
+void printData (int mode);
+
 
 void setup()
 {
-    Wire.begin();    //  Start the Wire library for I2C
+    
     
     Serial.begin(9600);    //  Start the serial port
     radio.begin();         //  Start the radio
     
     #if defined(TX)
+    Wire.begin();    //  Start the Wire library for I2C
     //  Prepare sensor
     radio.openWritingPipe(pipe);        //  Radio is ready for transmission
     mpu.initialize();                   //  Start the gyro
     //  Print gyro connection data
-    Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+    //Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
     #endif
     
     #if defined(RX)
