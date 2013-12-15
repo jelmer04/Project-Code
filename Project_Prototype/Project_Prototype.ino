@@ -1,11 +1,11 @@
-//  Arduino Leonardo is receiver
-#if defined(__AVR_ATmega32U4__)
+//  Arduino Uno is receiver
+#if defined(__AVR_ATmega328P__)
 #define RX
 #endif
 
 
-//  Arduino Uno is transmitter/sensor
-#if defined(__AVR_ATmega328P__)
+//  Arduino Leo is transmitter/sensor
+#if defined(__AVR_ATmega32U4__)
 #define TX
 #endif
 
