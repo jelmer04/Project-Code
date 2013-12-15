@@ -12,6 +12,7 @@
 //  Output types
 #define READABLE 0    //  Humanly readable output with headings
 #define CSV 1         //  Machine readable CSV output
+#define TIME 2      //  Output with time value
 
 //  Includes for radio communication
 #include <SPI.h>
@@ -21,6 +22,7 @@
 //  Control pins for radio
 #define CE_PIN   9
 #define CSN_PIN 10
+
 
 
 #if defined (TX)
@@ -55,24 +57,36 @@ void setup()
 {
     
     
-    Serial.begin(9600);    //  Start the serial port
-    radio.begin();         //  Start the radio
+    Serial.begin(38400);    //  Start the serial port
+    radio.begin();          //  Start the radio
     
     #if defined(TX)
     Wire.begin();    //  Start the Wire library for I2C
     //  Prepare sensor
     radio.openWritingPipe(pipe);        //  Radio is ready for transmission
     mpu.initialize();                   //  Start the gyro
+    
+    mpu.setFullScaleAccelRange(0);        //  ±1g
     //  Print gyro connection data
-    //Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+    Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
     #endif
     
     #if defined(RX)
+    digitalWrite(13, HIGH);
+    
+    while (!Serial) {};
+      //    Wait for serial connection
+    
+    digitalWrite(13, LOW);
+    
     //  Prepare receiver
     radio.openReadingPipe(1,pipe);        //  Radio is ready for receiving
     radio.startListening();               //  Start listening for transmission
     #endif
+
+    //radio.printDetails();
 }
+
 
 void loop()
 {
@@ -103,6 +117,7 @@ void loop()
         {
             done = radio.read(motion, sizeof(motion));
         }
+        time = millis();
     } else {
         //  Otherwise, there is no data available
         //Serial.println("No radio data available");
@@ -113,7 +128,7 @@ void loop()
     #endif
     {
         //  Print the data
-        printData(CSV);
+        printData(TIME);
         
     }
     count = motion[6]+1;    //  Increase the packet counter
@@ -141,6 +156,16 @@ void printData (int mode) {
             Serial.print(motion[4]);    Serial.print(", ");
             Serial.print(motion[5]);    Serial.print(", ");
             Serial.println(motion[6]);
+            break;
+            
+        case TIME:
+            Serial.print(motion[0]);    Serial.print(", ");
+            Serial.print(motion[1]);    Serial.print(", ");
+            Serial.print(motion[2]);    Serial.print(", ");
+            Serial.print(motion[3]);    Serial.print(", ");
+            Serial.print(motion[4]);    Serial.print(", ");
+            Serial.print(motion[5]);    Serial.print(", ");
+            Serial.println(time);
             break;
     }
 }
