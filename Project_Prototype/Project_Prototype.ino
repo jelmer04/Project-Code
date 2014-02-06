@@ -1,12 +1,14 @@
 //  Arduino Uno is receiver
 #if defined(__AVR_ATmega328P__)
 #define RX
+#define LED 2
 #endif
 
 
 //  Arduino Leo is transmitter/sensor
 #if defined(__AVR_ATmega32U4__)
 #define TX
+#define LED 13
 #endif
 
 //  Output types
@@ -22,6 +24,7 @@
 //  Control pins for radio
 #define CE_PIN   9
 #define CSN_PIN 10
+
 
 
 
@@ -49,13 +52,15 @@ int16_t count = 0;
 unsigned long time;        //  Time of last sample
 const unsigned long sampletime = 100;    //  ms between samples
 
+int LEDState = 0;        // State of LED
 
 void printData (int mode);
+void toggleLED ();
 
 
 void setup()
 {
-    
+    pinMode(LED, OUTPUT);
     
     Serial.begin(38400);    //  Start the serial port
     radio.begin();          //  Start the radio
@@ -67,24 +72,28 @@ void setup()
     mpu.initialize();                   //  Start the gyro
     
     mpu.setFullScaleAccelRange(0);        //  ±1g
+    
+    //while (!Serial) {};
+      //    Wait for serial connection
+      
     //  Print gyro connection data
     Serial.println(mpu.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
     #endif
     
     #if defined(RX)
-    digitalWrite(13, HIGH);
+    digitalWrite(LED, HIGH);
     
-    while (!Serial) {};
+    //while (!Serial) {};
       //    Wait for serial connection
     
-    digitalWrite(13, LOW);
+    digitalWrite(LED, LOW);
     
     //  Prepare receiver
     radio.openReadingPipe(1,pipe);        //  Radio is ready for receiving
     radio.startListening();               //  Start listening for transmission
     #endif
 
-    //radio.printDetails();
+    Serial.println(radio.get_status());
 }
 
 
@@ -95,6 +104,7 @@ void loop()
     while (millis() < time + sampletime)
     {
     }
+    
     
     //  Save the sample time
     time = millis();
@@ -111,6 +121,7 @@ void loop()
     //  Wait for data to be available
     if (radio.available())
     {
+        
         bool done = false;
         //  Read all the data from the radio
         while (!done)
@@ -122,7 +133,7 @@ void loop()
         //  Otherwise, there is no data available
         //Serial.println("No radio data available");
     }
-    
+        
     //  If the next packet is ready
     if (count == motion[6])
     #endif
@@ -130,8 +141,12 @@ void loop()
         //  Print the data
         printData(TIME);
         
+        toggleLED();
+        
     }
     count = motion[6]+1;    //  Increase the packet counter
+    
+    
     
 }
 
@@ -167,5 +182,17 @@ void printData (int mode) {
             Serial.print(motion[5]);    Serial.print(", ");
             Serial.println(time);
             break;
+    }
+}
+
+
+void toggleLED()
+{
+    if (LEDState==1) {
+        LEDState = 0;
+        digitalWrite(LED, LOW);
+    } else {
+        LEDState = 1;
+        digitalWrite(LED, HIGH);
     }
 }
