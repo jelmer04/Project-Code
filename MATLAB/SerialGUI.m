@@ -57,7 +57,7 @@ handles.output = hObject;
 
 
 % Data file
-fileName = 'data.txt';
+fileName = '27Feb.txt';
 
 % Mac
 handles.s = serial('/dev/tty.usbmodemfd131');
